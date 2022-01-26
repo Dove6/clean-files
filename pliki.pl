@@ -15,12 +15,12 @@ copy_dir        path to a directory where copies may reside
 ";
 @ALLOWED_MODES = (1, 2, 3, 4, 5, 6, 7);
 
-if (grep(/^(-h)|(--help)$/, @ARGV)) {
+if (&in_list('-h', @ARGV) or &in_list('--help', @ARGV)) {
     print $USAGE;
     exit();
 }
 ($mode, $original_dir, @copy_dirs) = @ARGV;
-if (defined $mode and not grep(/^$mode$/, @ALLOWED_MODES)) {
+if (defined $mode and not &in_list($mode, @ALLOWED_MODES)) {
     print STDERR "Invalid mode!\n";
     print STDERR $USAGE;
     exit();
@@ -40,3 +40,70 @@ $UNWANTED_SUBST = '_';
 @TMP_EXTS = ('~', '.tmp');
 
 do "$CONFIG_FILE_LOCATION" if -f "$CONFIG_FILE_LOCATION";
+
+sub eqi {
+    my ($a, $b) = @_;
+    return uc($a) eq uc($b);
+}
+
+sub in_list {
+    my ($needle, @haystack) = @_;
+    foreach (@haystack) {
+        if (&eqi($needle, $_)) {
+            return 1;
+        }
+    }
+}
+
+# source: https://stackoverflow.com/a/18104317
+sub prompt {
+  my ($query) = @_;  # take a prompt string as argument
+  local $| = 1;  # activate autoflush to immediately show the prompt
+  print $query;
+  chomp(my $answer = <STDIN>);
+  return $answer;
+}
+
+# based on: https://stackoverflow.com/a/18104317
+sub prompt_ynaec {
+    my ($query) = @_;
+    @ACCEPTABLE_ANSWERS = ('Y', 'N', 'A', 'E', 'C', '');
+    $message = 'Yes (Y)/ No (N)/ Yes for all (A)/ No for all (E)/ Cancel (C): [Y]';
+    my $answer = &prompt("$query$message\n");
+    while (not &in_list($answer, @ACCEPTABLE_ANSWERS)) {
+        print STDERR "Bad input!!\n";
+        $answer = &prompt("$query$message\n");
+    }
+    if ($answer eq '') {
+        $answer = 'Y';
+    }
+    return uc($answer);
+}
+
+sub remove_empty {
+    ;
+}
+
+sub remove_temp {
+    ;
+}
+
+sub unify_attrs {
+    ;
+}
+
+sub remove_same_name {
+    ;
+}
+
+sub remove_same_content {
+    ;
+}
+
+sub subst_chars {
+    ;
+}
+
+sub merge_dirs {
+    ;
+}
