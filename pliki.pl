@@ -1,6 +1,8 @@
 #!/bin/perl
 
-$USAGE = "usage: $0 mode original_dir [copy_dir...]
+use strict;
+
+my $USAGE = "usage: $0 mode original_dir [copy_dir...]
 
 mode            operational mode, which may be
                 1 - remove empty files
@@ -13,13 +15,13 @@ mode            operational mode, which may be
 original_dir    path to the original file directory
 copy_dir        path to a directory where copies may reside
 ";
-@ALLOWED_MODES = (1, 2, 3, 4, 5, 6, 7);
+my @ALLOWED_MODES = (1, 2, 3, 4, 5, 6, 7);
 
 if (&in_list('-h', @ARGV) or &in_list('--help', @ARGV)) {
     print $USAGE;
     exit();
 }
-($mode, $original_dir, @copy_dirs) = @ARGV;
+my ($mode, $original_dir, @copy_dirs) = @ARGV;
 if (defined $mode and not &in_list($mode, @ALLOWED_MODES)) {
     print STDERR "Invalid mode!\n";
     print STDERR $USAGE;
@@ -31,13 +33,13 @@ if (not defined $mode or not defined $original_dir) {
     exit();
 }
 
-$CONFIG_FILE_LOCATION = "$ENV{HOME}/.clean_files";
+my $CONFIG_FILE_LOCATION = "$ENV{HOME}/.clean_files";
 
 # default settings
-$UNIFIED_ATTRIBS = 0064;
-@UNWANTED_CHARS = (':', '"', '.', ';', '*', '?', '$', '#', '`', '|', '\\', ',', '<', '>', '/');
-$UNWANTED_SUBST = '_';
-@TMP_EXTS = ('~', '.tmp');
+my $UNIFIED_ATTRIBS = 0064;
+my @UNWANTED_CHARS = (':', '"', '.', ';', '*', '?', '$', '#', '`', '|', '\\', ',', '<', '>', '/');
+my $UNWANTED_SUBST = '_';
+my @TMP_EXTS = ('~', '.tmp');
 
 do "$CONFIG_FILE_LOCATION" if -f "$CONFIG_FILE_LOCATION";
 
@@ -67,8 +69,8 @@ sub prompt {
 # based on: https://stackoverflow.com/a/18104317
 sub prompt_ynaec {
     my ($query) = @_;
-    @ACCEPTABLE_ANSWERS = ('Y', 'N', 'A', 'E', 'C', '');
-    $message = 'Yes (Y)/ No (N)/ Yes for all (A)/ No for all (E)/ Cancel (C): [Y]';
+    my @ACCEPTABLE_ANSWERS = ('Y', 'N', 'A', 'E', 'C', '');
+    my $message = 'Yes (Y)/ No (N)/ Yes for all (A)/ No for all (E)/ Cancel (C): [Y]';
     my $answer = &prompt("$query$message\n");
     while (not &in_list($answer, @ACCEPTABLE_ANSWERS)) {
         print STDERR "Bad input!!\n";
