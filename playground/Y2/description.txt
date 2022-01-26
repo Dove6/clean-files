@@ -1,0 +1,8 @@
+Files:
+    .conf - system configuration file
+
+Dirs:
+    audio - music, recordings, etc.
+    photo - camera shots, pictures, images...
+    text  - text documents
+    video - movies, files from camcorder
