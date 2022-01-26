@@ -23,14 +23,23 @@ if (&in_list('-h', @ARGV) or &in_list('--help', @ARGV)) {
 }
 my ($mode, $original_dir, @copy_dirs) = @ARGV;
 if (defined $mode and not &in_list($mode, @ALLOWED_MODES)) {
-    print STDERR "Invalid mode!\n";
-    print STDERR $USAGE;
-    exit();
+    &my_die("Invalid mode: $mode");
+}
+if (defined $original_dir) {
+    my @sorted_dirs = ($original_dir, @copy_dirs);
+    my $last_dir;
+    for my $dir (@sorted_dirs) {
+        if (not -d $dir) {
+            &my_die("Invalid path: $dir");
+        }
+        if ($dir eq $last_dir) {
+            &my_die("Directory is duplicated: $dir");
+        }
+        $last_dir = $dir;
+    }
 }
 if (not defined $mode or not defined $original_dir) {
-    print STDERR "Required arguments are missing!\n";
-    print STDERR $USAGE;
-    exit();
+    &my_die('Required arguments are missing!');
 }
 
 my $CONFIG_FILE_LOCATION = "$ENV{HOME}/.clean_files";
@@ -42,6 +51,15 @@ my $UNWANTED_SUBST = '_';
 my @TMP_EXTS = ('~', '.tmp');
 
 do "$CONFIG_FILE_LOCATION" if -f "$CONFIG_FILE_LOCATION";
+
+
+
+sub my_die {
+    my ($message) = @_;
+    print STDERR "$message\n\n";
+    print STDERR $USAGE;
+    exit();
+}
 
 sub eqi {
     my ($a, $b) = @_;
@@ -59,11 +77,11 @@ sub in_list {
 
 # source: https://stackoverflow.com/a/18104317
 sub prompt {
-  my ($query) = @_;  # take a prompt string as argument
-  local $| = 1;  # activate autoflush to immediately show the prompt
-  print $query;
-  chomp(my $answer = <STDIN>);
-  return $answer;
+    my ($query) = @_;  # take a prompt string as argument
+    local $| = 1;  # activate autoflush to immediately show the prompt
+    print $query;
+    chomp(my $answer = <STDIN>);
+    return $answer;
 }
 
 # based on: https://stackoverflow.com/a/18104317
