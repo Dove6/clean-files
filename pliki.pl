@@ -81,19 +81,19 @@ foreach my $i (0..$#directories) {
 
 ### MAIN SWITCH ###
 
-if ($mode eq 1) {
+if ($mode == 1) {
     &remove_empty();
-} elsif ($mode eq 2) {
+} elsif ($mode == 2) {
     &remove_temp();
-} elsif ($mode eq 3) {
+} elsif ($mode == 3) {
     &unify_attrs();
-} elsif ($mode eq 4) {
+} elsif ($mode == 4) {
     &remove_same_name();
-} elsif ($mode eq 5) {
+} elsif ($mode == 5) {
     &remove_same_content();
-} elsif ($mode eq 6) {
+} elsif ($mode == 6) {
     &subst_chars();
-} elsif ($mode eq 7) {
+} elsif ($mode == 7) {
     &merge_dirs();
 }
 
@@ -119,6 +119,7 @@ sub remove_empty {
 
 sub remove_temp {
     print "Removing temporary files...\n";
+
     my $last_answer = '';
 
     &process_files(sub {
@@ -157,6 +158,45 @@ sub unify_attrs {
 
 sub remove_same_name {
     print "Removing duplicates (by name)...\n";
+
+    my $last_answer = '';
+    my %name_dict = ();
+
+    # hash files by their name
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        if (not defined $name_dict{$file_name}) {
+            $name_dict{$file_name} = [ [ $base_dir, $rel_dir ] ];
+        } else {
+            push(@{$name_dict{$file_name}}, [ $base_dir, $rel_dir ]);
+        }
+    });
+
+    # keep only duplicated ones
+    foreach my $file_name (keys %name_dict) {
+        if ($#{$name_dict{$file_name}} == 0) {
+            delete($name_dict{$file_name});
+        }
+    }
+
+    # process the dictionary
+    foreach my $file_name (keys %name_dict) {
+        my @occurences = @{$name_dict{$file_name}};
+        @occurences = map {
+            my ($base_dir, $rel_dir) = @{$_};
+            my $path = "$base_dir$rel_dir/$file_name";
+            [ $path, stat($path)->mtime ];
+        } @occurences;
+        @occurences = sort { @{$b}[1] <=> @{$a}[1] } @occurences;
+        my ($original, @duplicates) = @occurences;
+        foreach my $duplicate (@duplicates) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove file $duplicate->[0] from " . localtime($duplicate->[1]) .
+                    " (seemingly superseded by $original->[0] from " . localtime($original->[1]) . ")?"), ('Y', 'A'))) {
+                print "Removing $duplicate->[0]...\n";
+                unlink($duplicate->[0]);
+            }
+        }
+    }
 }
 
 sub remove_same_content {
