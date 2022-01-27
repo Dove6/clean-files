@@ -251,6 +251,22 @@ sub remove_same_content {
 
 sub subst_chars {
     print "Substituting unwanted characters in filenames...\n";
+
+    my $last_answer = '';
+
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        my $path = "$base_dir$rel_dir/$file_name";
+        my $match_pattern = join('|', map { quotemeta($_) } @UNWANTED_CHARS);
+        my $new_name = $file_name;
+        if ($new_name =~ s/$match_pattern/$UNWANTED_SUBST/g) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Rename badly named $path to $new_name?"), ('Y', 'A'))) {
+                print "Renaming $path...\n";
+                my $new_path = "$base_dir$rel_dir/$new_name";
+                rename($path, $new_path);
+            }
+        }
+    });
 }
 
 sub merge_dirs {

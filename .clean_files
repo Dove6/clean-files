@@ -1,4 +1,4 @@
 $UNIFIED_ATTRIBS = 0644;
-@UNWANTED_CHARS = (':', '"', '.', ';', '*', '?', '$', '#', '`', '|', '\\');
+@UNWANTED_CHARS = (':', '"', ' ', ';', '*', '?', '$', '#', '`', '|', '\\');
 $UNWANTED_SUBST = '-';
 @TMP_EXTS = ('~', '.tmp', '.temp', '.bak');
