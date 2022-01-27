@@ -56,7 +56,7 @@ if (not defined $mode or not defined $directories[0]) {
 my $CONFIG_FILE_LOCATION = "$ENV{HOME}/.clean_files";
 
 # default settings
-our $UNIFIED_ATTRIBS = 0064;
+our $UNIFIED_ATTRIBS = 0644;
 our @UNWANTED_CHARS = (':', '"', '.', ';', '*', '?', '$', '#', '`', '|', '\\', ',', '<', '>', '/');
 our $UNWANTED_SUBST = '_';
 our @TMP_EXTS = ('~', '.tmp');
