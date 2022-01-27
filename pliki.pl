@@ -1,6 +1,10 @@
-#!/bin/perl
+#!/usr/bin/env perl
 
 use strict;
+use warnings;
+
+use File::Find;
+use Data::Dumper;
 
 my $USAGE = "usage: $0 mode original_dir [copy_dir...]
 
@@ -17,18 +21,22 @@ copy_dir        path to a directory where copies may reside
 ";
 my @ALLOWED_MODES = (1, 2, 3, 4, 5, 6, 7);
 
+
+### VALIDATION OF ARGUMENTS ###
+
+my ($mode, @directories) = @ARGV;
+
 if (&in_list('-h', @ARGV) or &in_list('--help', @ARGV)) {
     print $USAGE;
     exit();
 }
-my ($mode, $original_dir, @copy_dirs) = @ARGV;
 if (defined $mode and not &in_list($mode, @ALLOWED_MODES)) {
     &my_die("Invalid mode: $mode");
 }
-if (defined $original_dir) {
-    my @sorted_dirs = ($original_dir, @copy_dirs);
-    my $last_dir;
-    for my $dir (@sorted_dirs) {
+if (defined $directories[0]) {
+    my @sorted_dirs = sort @directories;
+    my $last_dir = '';
+    foreach my $dir (@sorted_dirs) {
         if (not -d $dir) {
             &my_die("Invalid path: $dir");
         }
@@ -38,9 +46,12 @@ if (defined $original_dir) {
         $last_dir = $dir;
     }
 }
-if (not defined $mode or not defined $original_dir) {
+if (not defined $mode or not defined $directories[0]) {
     &my_die('Required arguments are missing!');
 }
+
+
+### CONFIGURATION DEFINITION ###
 
 my $CONFIG_FILE_LOCATION = "$ENV{HOME}/.clean_files";
 
@@ -50,9 +61,30 @@ my @UNWANTED_CHARS = (':', '"', '.', ';', '*', '?', '$', '#', '`', '|', '\\', ',
 my $UNWANTED_SUBST = '_';
 my @TMP_EXTS = ('~', '.tmp');
 
-do "$CONFIG_FILE_LOCATION" if -f "$CONFIG_FILE_LOCATION";
+do "$CONFIG_FILE_LOCATION" if (-f "$CONFIG_FILE_LOCATION");
 
 
+### GATHERING ALL FILES ###
+my @files_in_dirs = ();
+foreach my $i (0..$#directories) {
+    my @files_in_dir = ();
+    find(sub {
+        my ($name_only, $relative_dir) = ($_, $File::Find::dir);
+        $relative_dir =~ s/\Q$directories[$i]//;
+        push(@files_in_dir, [ $name_only, $relative_dir ]) if (-f $_);
+    }, $directories[$i]);
+    push(@files_in_dirs, \@files_in_dir);
+}
+
+print "Found files:\n";
+foreach my $i (0..$#directories) {
+    foreach my $file_info (@{$files_in_dirs[$i]}) {
+        print "$directories[$i]$file_info->[1]/$file_info->[0]\n";
+    }
+}
+
+
+### PROCEDURES ###
 
 sub my_die {
     my ($message) = @_;
