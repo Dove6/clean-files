@@ -5,6 +5,7 @@ use warnings;
 
 use File::Find;
 use File::stat;
+use Digest::MD5;
 use Data::Dumper;
 
 my $USAGE = "usage: $0 mode original_dir [copy_dir...]
@@ -201,6 +202,51 @@ sub remove_same_name {
 
 sub remove_same_content {
     print "Removing duplicates (by content)...\n";
+
+    my $last_answer = '';
+    my %digest_dict = ();
+
+    # hash files by their digest
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        my $path = "$base_dir$rel_dir/$file_name";
+        open(my $handle, "<$path");
+        binmode($handle);
+        my $digest = Digest::MD5->new->addfile($handle)->hexdigest;
+        close($handle);
+        if (not defined $digest_dict{$digest}) {
+            $digest_dict{$digest} = [ [ $base_dir, $rel_dir, $file_name ] ];
+        } else {
+            push(@{$digest_dict{$digest}}, [ $base_dir, $rel_dir, $file_name ]);
+        }
+    });
+
+    # keep only duplicated ones
+    foreach my $digest (keys %digest_dict) {
+        if ($#{$digest_dict{$digest}} == 0) {
+            delete($digest_dict{$digest});
+        }
+    }
+
+    # process the dictionary
+    foreach my $digest (keys %digest_dict) {
+        my @occurences = @{$digest_dict{$digest}};
+        @occurences = map {
+            my ($base_dir, $rel_dir, $file_name) = @{$_};
+            my $path = "$base_dir$rel_dir/$file_name";
+            [ $path, stat($path)->mtime ];
+        } @occurences;
+        @occurences = sort { @{$a}[1] <=> @{$b}[1] } @occurences;
+
+        my ($original, @duplicates) = @occurences;
+        foreach my $duplicate (@duplicates) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove file $duplicate->[0] from " . localtime($duplicate->[1]) .
+                    " (probably a backup of $original->[0] from " . localtime($original->[1]) . ")?"), ('Y', 'A'))) {
+                print "Removing $duplicate->[0]...\n";
+                unlink($duplicate->[0]);
+            }
+        }
+    }
 }
 
 sub subst_chars {
