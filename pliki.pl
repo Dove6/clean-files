@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use File::Find;
+use File::stat;
 use Data::Dumper;
 
 my $USAGE = "usage: $0 mode original_dir [copy_dir...]
@@ -137,6 +138,21 @@ sub remove_temp {
 
 sub unify_attrs {
     print "Unifying attributes...\n";
+
+    my $last_answer = '';
+    my $octal_unified = sprintf('%#04o', $UNIFIED_ATTRIBS);
+
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        my $path = "$base_dir$rel_dir/$file_name";
+        my $mode = stat($path)->mode & 0777;
+        if ($mode ^ $UNIFIED_ATTRIBS) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Set attributes of $path to $octal_unified?"), ('Y', 'A'))) {
+                print "Changing attributes of $path...\n";
+                chmod($UNIFIED_ATTRIBS, $path);
+            }
+        }
+    });
 }
 
 sub remove_same_name {
