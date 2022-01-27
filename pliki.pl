@@ -8,7 +8,6 @@ use File::Find;
 use File::Path qw(make_path);
 use File::stat;
 use Digest::MD5;
-use Data::Dumper;
 
 my $USAGE = "usage: $0 mode original_dir [copy_dir...]
 
