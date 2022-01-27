@@ -114,7 +114,7 @@ sub remove_empty {
         if (-z $path) {
             if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove empty file $path?"), ('Y', 'A'))) {
                 print "Removing $path...\n";
-                unlink($path);
+                unlink($path) or print STDERR "Could not remove $path\n";
             }
         }
     });
@@ -132,7 +132,7 @@ sub remove_temp {
             if ($path =~ m/\Q$tmp_ext\E$/) {
                 if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove temporary file $path?"), ('Y', 'A'))) {
                     print "Removing $path...\n";
-                    unlink($path);
+                    unlink($path) or print STDERR "Could not remove $path\n";
                     last;
                 }
             }
@@ -153,7 +153,7 @@ sub unify_attrs {
         if ($mode ^ $UNIFIED_ATTRIBS) {
             if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Set attributes of $path to $octal_unified?"), ('Y', 'A'))) {
                 print "Changing attributes of $path...\n";
-                chmod($UNIFIED_ATTRIBS, $path);
+                chmod($UNIFIED_ATTRIBS, $path) or print STDERR "Could not change mode of $path\n";
             }
         }
     });
@@ -196,7 +196,7 @@ sub remove_same_name {
             if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove file $duplicate->[0] from " . localtime($duplicate->[1]) .
                     " (seemingly superseded by $original->[0] from " . localtime($original->[1]) . ")?"), ('Y', 'A'))) {
                 print "Removing $duplicate->[0]...\n";
-                unlink($duplicate->[0]);
+                unlink($duplicate->[0]) or print STDERR "Could not remove $duplicate->[0]\n";
             }
         }
     }
@@ -245,7 +245,7 @@ sub remove_same_content {
             if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove file $duplicate->[0] from " . localtime($duplicate->[1]) .
                     " (probably a backup of $original->[0] from " . localtime($original->[1]) . ")?"), ('Y', 'A'))) {
                 print "Removing $duplicate->[0]...\n";
-                unlink($duplicate->[0]);
+                unlink($duplicate->[0]) or print STDERR "Could not remove $duplicate->[0]\n";
             }
         }
     }
@@ -265,7 +265,7 @@ sub subst_chars {
             if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Rename badly named $path to $new_name?"), ('Y', 'A'))) {
                 print "Renaming $path...\n";
                 my $new_path = "$base_dir$rel_dir/$new_name";
-                rename($path, $new_path);
+                rename($path, $new_path) or print STDERR "Could not rename $path\n";
             }
         }
     });
@@ -290,7 +290,7 @@ sub merge_dirs {
                 if (not -e $mirror_dir) {
                     make_path($mirror_dir);
                 }
-                move($path, $mirror_path);
+                move($path, $mirror_path) or print STDERR "Could not move $path\n";
             }
         }
     });
