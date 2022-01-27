@@ -3,7 +3,9 @@
 use strict;
 use warnings;
 
+use File::Copy;
 use File::Find;
+use File::Path qw(make_path);
 use File::stat;
 use Digest::MD5;
 use Data::Dumper;
@@ -271,6 +273,27 @@ sub subst_chars {
 
 sub merge_dirs {
     print "Merging directories...\n";
+
+    my $last_answer = '';
+
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        if ($base_dir eq $directories[0]) {
+            return;
+        }
+        my $path = "$base_dir$rel_dir/$file_name";
+        my $mirror_dir = "$directories[0]$rel_dir/";
+        my $mirror_path = "$mirror_dir$file_name";
+        if (not -e $mirror_path) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Move file $path to $mirror_dir?"), ('Y', 'A'))) {
+                print "Moving $path...\n";
+                if (not -e $mirror_dir) {
+                    make_path($mirror_dir);
+                }
+                move($path, $mirror_path);
+            }
+        }
+    });
 }
 
 sub process_files {
