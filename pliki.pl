@@ -118,6 +118,21 @@ sub remove_empty {
 
 sub remove_temp {
     print "Removing temporary files...\n";
+    my $last_answer = '';
+
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        my $path = "$base_dir$rel_dir/$file_name";
+        foreach my $tmp_ext (@TMP_EXTS) {
+            if ($path =~ m/\Q$tmp_ext\E$/) {
+                if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove temporary file $path?"), ('Y', 'A'))) {
+                    print "Removing $path...\n";
+                    unlink($path);
+                    last;
+                }
+            }
+        }
+    });
 }
 
 sub unify_attrs {
