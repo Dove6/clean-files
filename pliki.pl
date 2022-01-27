@@ -65,6 +65,7 @@ do "$CONFIG_FILE_LOCATION" if (-f "$CONFIG_FILE_LOCATION");
 
 
 ### GATHERING ALL FILES ###
+
 my @files_in_dirs = ();
 foreach my $i (0..$#directories) {
     my @files_in_dir = ();
@@ -76,15 +77,69 @@ foreach my $i (0..$#directories) {
     push(@files_in_dirs, \@files_in_dir);
 }
 
-print "Found files:\n";
-foreach my $i (0..$#directories) {
-    foreach my $file_info (@{$files_in_dirs[$i]}) {
-        print "$directories[$i]$file_info->[1]/$file_info->[0]\n";
-    }
+
+### MAIN SWITCH ###
+
+if ($mode eq 1) {
+    &remove_empty();
+} elsif ($mode eq 2) {
+    &remove_temp();
+} elsif ($mode eq 3) {
+    &unify_attrs();
+} elsif ($mode eq 4) {
+    &remove_same_name();
+} elsif ($mode eq 5) {
+    &remove_same_content();
+} elsif ($mode eq 6) {
+    &subst_chars();
+} elsif ($mode eq 7) {
+    &merge_dirs();
 }
 
 
 ### PROCEDURES ###
+
+sub remove_empty {
+    print "Removing empty files...\n";
+
+    my $last_answer = '';
+
+    foreach my $i (0..$#directories) {
+        foreach my $file_info (@{$files_in_dirs[$i]}) {
+            my $path = "$directories[$i]$file_info->[1]/$file_info->[0]";
+            if (-z $path) {
+                if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove empty file $path?"), ('Y', 'A'))) {
+                    print "Removing $path...\n";
+                    unlink($path);
+                }
+            }
+        }
+    }
+}
+
+sub remove_temp {
+    print "Removing temporary files...\n";
+}
+
+sub unify_attrs {
+    print "Unifying attributes...\n";
+}
+
+sub remove_same_name {
+    print "Removing duplicates (by name)...\n";
+}
+
+sub remove_same_content {
+    print "Removing duplicates (by content)...\n";
+}
+
+sub subst_chars {
+    print "Substituting unwanted characters in filenames...\n";
+}
+
+sub merge_dirs {
+    print "Merging directories...\n";
+}
 
 sub my_die {
     my ($message) = @_;
@@ -117,45 +172,17 @@ sub prompt {
 }
 
 # based on: https://stackoverflow.com/a/18104317
-sub prompt_ynaec {
+sub prompt_yna {
     my ($query) = @_;
-    my @ACCEPTABLE_ANSWERS = ('Y', 'N', 'A', 'E', 'C', '');
-    my $message = 'Yes (Y)/ No (N)/ Yes for all (A)/ No for all (E)/ Cancel (C): [Y]';
-    my $answer = &prompt("$query$message\n");
+    my @ACCEPTABLE_ANSWERS = ('Y', 'N', 'A', '');
+    my $message = 'Yes (Y)/ No (N)/ Yes to all (A): [Y]';
+    my $answer = &prompt("$query\n$message\n");
     while (not &in_list($answer, @ACCEPTABLE_ANSWERS)) {
         print STDERR "Bad input!!\n";
-        $answer = &prompt("$query$message\n");
+        $answer = &prompt("$query\n$message\n");
     }
     if ($answer eq '') {
         $answer = 'Y';
     }
     return uc($answer);
-}
-
-sub remove_empty {
-    ;
-}
-
-sub remove_temp {
-    ;
-}
-
-sub unify_attrs {
-    ;
-}
-
-sub remove_same_name {
-    ;
-}
-
-sub remove_same_content {
-    ;
-}
-
-sub subst_chars {
-    ;
-}
-
-sub merge_dirs {
-    ;
 }
