@@ -104,17 +104,16 @@ sub remove_empty {
 
     my $last_answer = '';
 
-    foreach my $i (0..$#directories) {
-        foreach my $file_info (@{$files_in_dirs[$i]}) {
-            my $path = "$directories[$i]$file_info->[1]/$file_info->[0]";
-            if (-z $path) {
-                if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove empty file $path?"), ('Y', 'A'))) {
-                    print "Removing $path...\n";
-                    unlink($path);
-                }
+    &process_files(sub {
+        my ($base_dir, $rel_dir, $file_name) = @_;
+        my $path = "$base_dir$rel_dir/$file_name";
+        if (-z $path) {
+            if ($last_answer eq 'A' or &in_list($last_answer = &prompt_yna("Remove empty file $path?"), ('Y', 'A'))) {
+                print "Removing $path...\n";
+                unlink($path);
             }
         }
-    }
+    });
 }
 
 sub remove_temp {
@@ -139,6 +138,15 @@ sub subst_chars {
 
 sub merge_dirs {
     print "Merging directories...\n";
+}
+
+sub process_files {
+    my ($callback) = @_;
+    foreach my $i (0..$#directories) {
+        foreach my $file_info (@{$files_in_dirs[$i]}) {
+            $callback->($directories[$i], $file_info->[1], $file_info->[0]);
+        }
+    }
 }
 
 sub my_die {
